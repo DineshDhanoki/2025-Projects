@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>IT Incident Prediction Journey</title>
+    <style>
+      /* --- DARK MODE (DEFAULT) --- */
+      :root {
+        --bg-primary: #0d1117;
+        --bg-secondary: #161b22;
+        --text-primary: #e6edf3;
+        --text-secondary: #8b949e;
+        --accent-primary: #8b5cf6;
+        --accent-secondary: #6366f1;
+        --glass-bg: rgba(139, 92, 246, 0.05);
+        --glass-border: rgba(139, 92, 246, 0.1);
+        --shadow: rgba(0, 0, 0, 0.3);
+      }
+
+      /* --- LIGHT MODE --- */
+      [data-theme="light"] {
+        --bg-primary: #f9fafb;
+        --bg-secondary: #ffffff;
+        --text-primary: #1f2937;
+        --text-secondary: #4b5563;
+        --accent-primary: #2563eb;
+        --accent-secondary: #4f46e5;
+        --glass-bg: rgba(0, 0, 0, 0.03);
+        --glass-border: rgba(0, 0, 0, 0.08);
+        --shadow: rgba(0, 0, 0, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", sans-serif;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        overflow: hidden;
+        height: 100vh;
+      }
+
+      /* --- INTRO SCREEN --- */
+      #intro {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 1.5s ease, visibility 1.5s;
+        padding: 1rem;
+        background: linear-gradient(-45deg, #0d1117, #1e1b4b, #312e81, #0d1117);
+        background-size: 400% 400%;
+        animation: animated-gradient 15s ease infinite;
+      }
+      [data-theme="light"] #intro {
+        background: linear-gradient(-45deg, #eff6ff, #e0e7ff, #dbeafe, #eff6ff);
+        background-size: 400% 400%;
+        animation: animated-gradient 15s ease infinite;
+      }
+      @keyframes animated-gradient {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+      #intro.fade-out {
+        opacity: 0;
+        visibility: hidden;
+      }
+      .intro-content {
+        text-align: center;
+      }
+      #intro h1 {
+        font-size: clamp(3rem, 8vw, 6rem);
+        font-weight: 800;
+        letter-spacing: -3px;
+        background: linear-gradient(
+          45deg,
+          var(--accent-primary),
+          var(--accent-secondary)
+        );
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        animation: fadeInUp 1.5s ease-out 0.5s both;
+      }
+      #intro .subtitle {
+        font-size: clamp(1.2rem, 4vw, 2rem);
+        font-weight: 300;
+        color: var(--text-secondary);
+        animation: fadeInUp 1.5s ease-out 1s both;
+      }
+      #intro .creator-name {
+        font-size: clamp(1.1rem, 3vw, 1.5rem);
+        font-weight: 500;
+        color: var(--text-primary);
+        opacity: 0.8;
+        margin-top: 2.5rem;
+        letter-spacing: 1px;
+        animation: fadeInUp 1.5s ease-out 1.5s both;
+      }
+      .start-btn {
+        margin-top: 3rem;
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        background-color: var(--accent-primary);
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 20px rgba(139, 92, 246, 0.4);
+        animation: fadeInUp 1.5s ease-out 2s both;
+      }
+      .start-btn:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.6);
+      }
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* --- THEME TOGGLE --- */
+      .theme-toggle {
+        position: fixed;
+        top: 25px;
+        right: 25px;
+        z-index: 10000; /* UPDATED Z-INDEX */
+        background: var(--bg-secondary);
+        border: 1px solid var(--glass-border);
+        border-radius: 50px;
+        padding: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 15px var(--shadow);
+      }
+      .theme-toggle:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 8px 25px var(--shadow);
+      }
+      .theme-icon {
+        font-size: 20px;
+      }
+
+      /* --- FADE-OUT / REVEAL TRANSITION ENGINE --- */
+      .journey {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: linear-gradient(-45deg, #0d1117, #1e1b4b, #312e81, #0d1117);
+        background-size: 400% 400%;
+        animation: animated-gradient 15s ease infinite;
+      }
+      [data-theme="light"] .journey {
+        background: linear-gradient(-45deg, #eff6ff, #e0e7ff, #dbeafe, #eff6ff);
+        background-size: 400% 400%;
+        animation: animated-gradient 15s ease infinite;
+      }
+
+      .slide {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 3rem;
+        overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        transition: background-color 0.5s ease;
+      }
+
+      /* --- Slide Color Tints --- */
+      .slide:nth-of-type(1) {
+        background-color: rgba(139, 92, 246, 0.1);
+      } /* Purple Tint */
+      .slide:nth-of-type(2) {
+        background-color: rgba(99, 102, 241, 0.1);
+      } /* Indigo Tint */
+      .slide:nth-of-type(3) {
+        background-color: rgba(139, 92, 246, 0.15);
+      } /* Darker Purple */
+      .slide:nth-of-type(4) {
+        background-color: rgba(20, 83, 45, 0.15);
+      } /* Green Tint */
+      .slide:nth-of-type(5) {
+        background-color: rgba(99, 102, 241, 0.2);
+      } /* Darker Indigo */
+
+      [data-theme="light"] .slide:nth-of-type(1) {
+        background-color: rgba(37, 99, 235, 0.05);
+      }
+      [data-theme="light"] .slide:nth-of-type(2) {
+        background-color: rgba(79, 70, 229, 0.05);
+      }
+      [data-theme="light"] .slide:nth-of-type(3) {
+        background-color: rgba(37, 99, 235, 0.07);
+      }
+      [data-theme="light"] .slide:nth-of-type(4) {
+        background-color: rgba(21, 128, 61, 0.07);
+      }
+      [data-theme="light"] .slide:nth-of-type(5) {
+        background-color: rgba(79, 70, 229, 0.1);
+      }
+
+      .slide.active {
+        opacity: 1;
+        visibility: visible;
+        z-index: 2;
+      }
+      .slide.is-fading-out {
+        opacity: 0;
+        transition: opacity 0.75s ease, visibility 0.75s;
+      }
+      .anim-content {
+        opacity: 0;
+      }
+      .slide.active .anim-content {
+        animation: contentFadeInUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+          forwards;
+      }
+      @keyframes contentFadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .slide.active h1 {
+        animation-delay: 0.2s;
+      }
+      .slide.active h2 {
+        animation-delay: 0.3s;
+      }
+      .slide.active > p {
+        animation-delay: 0.4s;
+      }
+      .slide.active .feature-grid {
+        animation-delay: 0.5s;
+      }
+      .slide.active .tech-stack {
+        animation-delay: 0.6s;
+      }
+
+      .step-number {
+        position: absolute;
+        top: 0;
+        left: 3rem;
+        font-size: 10rem;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.05);
+        z-index: -1;
+      }
+      .slide h1 {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        margin-bottom: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -1.5px;
+      }
+      .slide h2 {
+        font-size: clamp(1.5rem, 4vw, 2.2rem);
+        margin-bottom: 2rem;
+        font-weight: 600;
+        opacity: 0.9;
+      }
+      .slide > p {
+        font-size: clamp(1rem, 2.5vw, 1.25rem);
+        max-width: 900px;
+        line-height: 1.7;
+        color: var(--text-primary);
+        opacity: 0.9;
+      }
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin-top: 3rem;
+        width: 100%;
+      }
+      .feature-box {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: left;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 32px var(--shadow);
+      }
+      .feature-box:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 16px 40px var(--shadow);
+      }
+      .feature-box h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--accent-primary);
+      }
+      .feature-box p,
+      .feature-box ul {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: var(--text-primary);
+        opacity: 0.85;
+      }
+      .feature-box ul {
+        list-style: none;
+        padding-left: 0;
+      }
+      .feature-box li {
+        margin-bottom: 0.75rem;
+        position: relative;
+        padding-left: 1.5rem;
+      }
+      .feature-box li::before {
+        content: "✓";
+        color: var(--accent-primary);
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+      }
+      .tech-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        justify-content: center;
+        margin-top: 2.5rem;
+      }
+      .tech-badge {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        color: var(--text-secondary);
+      }
+      .tech-badge:hover {
+        background: var(--accent-primary);
+        border-color: var(--accent-primary);
+        color: #ffffff;
+        transform: translateY(-4px) scale(1.1);
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+      }
+
+      /* --- NAVIGATION --- */
+      .nav,
+      .progress {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+      }
+      .nav {
+        bottom: 100px;
+        display: flex;
+        gap: 1rem;
+      }
+      .progress {
+        bottom: 40px;
+        display: flex;
+        gap: 1rem;
+        padding: 12px 20px;
+        background: var(--bg-secondary);
+        border-radius: 50px;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 8px 32px var(--shadow);
+      }
+      .nav button {
+        padding: 12px 28px;
+        border: none;
+        border-radius: 50px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 1px solid var(--glass-border);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px var(--shadow);
+      }
+      .nav button:hover {
+        background: var(--accent-primary);
+        color: #ffffff;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px var(--shadow);
+      }
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--glass-border);
+        transition: all 0.4s ease;
+        cursor: pointer;
+      }
+      .dot:hover {
+        transform: scale(1.2);
+        background: var(--accent-primary);
+      }
+      .dot.active {
+        background: var(--accent-primary);
+        transform: scale(1.4);
+      }
+
+      @media (max-width: 768px) {
+        .slide {
+          padding: 4rem 1.5rem;
+        }
+        .step-number {
+          font-size: 6rem;
+          left: 1.5rem;
+        }
+        .nav {
+          bottom: 90px;
+        }
+        .progress {
+          bottom: 30px;
+        }
+        .feature-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="dark">
+    <div
+      class="theme-toggle"
+      onclick="toggleTheme()"
+      role="button"
+      aria-label="Toggle theme"
+    >
+      <span class="theme-icon">🌙</span>
+    </div>
+
+    <div id="intro">
+      <div class="intro-content">
+        <h1>IT Incident Prediction</h1>
+        <p class="subtitle">A Machine Learning Journey</p>
+        <p class="creator-name">By Dinesh Dhanoki</p>
+        <button class="start-btn" onclick="startJourney()">
+          Begin Journey
+        </button>
+      </div>
+    </div>
+
+    <div id="journey" class="journey">
+      <div class="slide active">
+        <div class="step-number">01</div>
+        <h1 class="anim-content">Project Overview</h1>
+        <h2 class="anim-content">
+          Predicting IT Incidents with Machine Learning
+        </h2>
+        <p class="anim-content">
+          This journey transforms raw event logs into actionable insights. Using
+          the initial events of each incident, we build predictive models to
+          anticipate and prevent IT disruptions before they impact operations.
+        </p>
+        <div class="feature-grid anim-content">
+          <div class="feature-box">
+            <h3>🔍 Data Challenge</h3>
+            <p>
+              Analyzing event logs with missing values, duplicates, and SLA
+              inconsistencies requires sophisticated preprocessing and feature
+              engineering.
+            </p>
+          </div>
+          <div class="feature-box">
+            <h3>🧠 ML Models</h3>
+            <p>
+              Comparing baseline and advanced algorithms, optimized for temporal
+              sequence prediction and creating effective early warning systems.
+            </p>
+          </div>
+          <div class="feature-box">
+            <h3>💡 Business Impact</h3>
+            <p>
+              Achieving proactive incident management to reduce downtime through
+              intelligent warnings and automated response triggers.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide">
+        <div class="step-number">02</div>
+        <h1 class="anim-content">Feature Engineering</h1>
+        <h2 class="anim-content">Temporal & Categorical Intelligence</h2>
+        <div class="feature-grid anim-content">
+          <div class="feature-box">
+            <h3>🕒 Temporal Features</h3>
+            <ul>
+              <li>Inter-event timing patterns</li>
+              <li>Circadian rhythm detection</li>
+              <li>Weekly seasonality correlations</li>
+              <li>Holiday and maintenance window impact</li>
+            </ul>
+          </div>
+          <div class="feature-box">
+            <h3>📊 Categorical Features</h3>
+            <ul>
+              <li>Event type n-gram sequences</li>
+              <li>Severity escalation pathway modeling</li>
+              <li>Component dependency features</li>
+              <li>Error signature clustering</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tech-stack anim-content">
+          <div class="tech-badge">Pandas</div>
+          <div class="tech-badge">NumPy</div>
+          <div class="tech-badge">Scikit-learn</div>
+          <div class="tech-badge">Feature Engineering</div>
+          <div class="tech-badge">Time Series</div>
+        </div>
+      </div>
+
+      <div class="slide">
+        <div class="step-number">03</div>
+        <h1 class="anim-content">Model Development</h1>
+        <h2 class="anim-content">Baseline & Advanced ML Pipeline</h2>
+        <div class="feature-grid anim-content">
+          <div class="feature-box">
+            <h3>📈 Baseline Models</h3>
+            <ul>
+              <li>Logistic Regression</li>
+              <li>Decision Trees</li>
+              <li>Random Forest</li>
+              <li>Naive Bayes</li>
+            </ul>
+          </div>
+          <div class="feature-box">
+            <h3>🚀 Advanced Models</h3>
+            <ul>
+              <li>XGBoost with hyperparameter tuning</li>
+              <li>LSTM Networks for sequences</li>
+              <li>Stacked ensemble methods</li>
+              <li>Transformer-based models</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tech-stack anim-content">
+          <div class="tech-badge">XGBoost</div>
+          <div class="tech-badge">TensorFlow</div>
+          <div class="tech-badge">PyTorch</div>
+          <div class="tech-badge">Scikit-learn</div>
+          <div class="tech-badge">Hyperopt</div>
+        </div>
+      </div>
+
+      <div class="slide">
+        <div class="step-number">04</div>
+        <h1 class="anim-content">Analysis & Insights</h1>
+        <h2 class="anim-content">Understanding Early Warning Signals</h2>
+        <div class="feature-grid anim-content">
+          <div class="feature-box">
+            <h3>🔍 Key Discoveries</h3>
+            <ul>
+              <li>First event timing is a critical predictor</li>
+              <li>Error sequence entropy correlates with severity</li>
+              <li>System load thresholds reveal cascade patterns</li>
+              <li>User activity spikes precede auth incidents</li>
+            </ul>
+          </div>
+          <div class="feature-box">
+            <h3>🎯 Performance Metrics</h3>
+            <ul>
+              <li>Precision: 87%</li>
+              <li>Recall: 82%</li>
+              <li>F1-Score: 84.5%</li>
+              <li>Avg. Lead Time: 15.3 minutes</li>
+            </ul>
+          </div>
+          <div class="feature-box">
+            <h3>📈 Causal Analysis</h3>
+            <p>
+              Advanced techniques reveal intervention opportunities, showing
+              potential for 40% incident prevention through proactive system
+              adjustments.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide">
+        <div class="step-number">05</div>
+        <h1 class="anim-content">Interactive Frontend</h1>
+        <h2 class="anim-content">Real-time Prediction Dashboard</h2>
+        <p class="anim-content">
+          This enhanced presentation demonstrates advanced frontend capabilities
+          with smooth animations, responsive design, and accessibility
+          features—showcasing the complete user experience.
+        </p>
+        <div class="feature-grid anim-content">
+          <div class="feature-box">
+            <h3>✨ Key Features</h3>
+            <ul>
+              <li>Fluid horizontal navigation</li>
+              <li>Modern CSS animations</li>
+              <li>Glassmorphism UI design</li>
+              <li>Adaptive light/dark theme system</li>
+            </ul>
+          </div>
+          <div class="feature-box">
+            <h3>🎨 Design Principles</h3>
+            <ul>
+              <li>Clean, modern typography</li>
+              <li>Dynamic color adaptation</li>
+              <li>WCAG 2.1 AA accessibility</li>
+              <li>Intuitive user interactions</li>
+            </ul>
+          </div>
+          <div class="feature-box">
+            <h3>⚡ Performance</h3>
+            <ul>
+              <li>Hardware-accelerated CSS</li>
+              <li>Optimized animation frames</li>
+              <li>Efficient event handling</li>
+              <li>Reduced motion support</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tech-stack anim-content">
+          <div class="tech-badge">HTML5</div>
+          <div class="tech-badge">CSS3</div>
+          <div class="tech-badge">JavaScript ES6+</div>
+          <div class="tech-badge">Responsive Design</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button onclick="prev()" aria-label="Previous slide">Previous</button>
+      <button onclick="next()" aria-label="Next slide">Next</button>
+    </div>
+
+    <div class="progress">
+      <div
+        class="dot active"
+        onclick="goTo(0)"
+        aria-label="Slide 1: Overview"
+        tabindex="0"
+      ></div>
+      <div
+        class="dot"
+        onclick="goTo(1)"
+        aria-label="Slide 2: Feature Engineering"
+        tabindex="0"
+      ></div>
+      <div
+        class="dot"
+        onclick="goTo(2)"
+        aria-label="Slide 3: Model Development"
+        tabindex="0"
+      ></div>
+      <div
+        class="dot"
+        onclick="goTo(3)"
+        aria-label="Slide 4: Analysis"
+        tabindex="0"
+      ></div>
+      <div
+        class="dot"
+        onclick="goTo(4)"
+        aria-label="Slide 5: Frontend"
+        tabindex="0"
+      ></div>
+    </div>
+
+    <script>
+      let current = 0;
+      const slides = document.querySelectorAll(".slide");
+      const dots = document.querySelectorAll(".dot");
+      let isAnimating = false;
+      const transitionDuration = 750;
+
+      function startJourney() {
+        document.getElementById("intro").classList.add("fade-out");
+      }
+      function toggleTheme() {
+        const body = document.body;
+        const themeIcon = document.querySelector(".theme-icon");
+        const newTheme =
+          body.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        body.setAttribute("data-theme", newTheme);
+        themeIcon.textContent = newTheme === "light" ? "☀️" : "🌙";
+        localStorage.setItem("preferred-theme", newTheme);
+      }
+
+      function goTo(step) {
+        if (
+          isAnimating ||
+          step === current ||
+          step < 0 ||
+          step >= slides.length
+        )
+          return;
+        isAnimating = true;
+
+        const outgoingSlide = slides[current];
+        const incomingSlide = slides[step];
+
+        outgoingSlide.classList.add("is-fading-out");
+
+        setTimeout(() => {
+          outgoingSlide.classList.remove("active", "is-fading-out");
+
+          incomingSlide.classList.add("active");
+          current = step;
+          updateDots();
+          isAnimating = false;
+        }, transitionDuration);
+      }
+
+      function updateDots() {
+        dots.forEach((dot, i) => dot.classList.toggle("active", i === current));
+        const slideTitle = slides[current].querySelector("h1").textContent;
+        document.title = `${slideTitle} - IT Incident Prediction`;
+      }
+
+      function next() {
+        goTo(current + 1);
+      }
+      function prev() {
+        goTo(current - 1);
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight") next();
+        if (e.key === "ArrowLeft") prev();
+      });
+
+      window.addEventListener(
+        "wheel",
+        (e) => {
+          if (isAnimating) return;
+          e.preventDefault();
+          if (e.deltaY > 0 || e.deltaX > 0) next();
+          else prev();
+        },
+        { passive: false }
+      );
+
+      let touchStartX = 0;
+      window.addEventListener("touchstart", (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      });
+      window.addEventListener("touchend", (e) => {
+        if (isAnimating) return;
+        const diff = e.changedTouches[0].screenX - touchStartX;
+        if (Math.abs(diff) > 50) {
+          if (diff < 0) next();
+          else prev();
+        }
+      });
+
+      function init() {
+        const savedTheme = localStorage.getItem("preferred-theme");
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        if (savedTheme) {
+          if (savedTheme !== document.body.getAttribute("data-theme"))
+            toggleTheme();
+        } else if (
+          !prefersDark &&
+          document.body.getAttribute("data-theme") === "dark"
+        ) {
+          toggleTheme();
+        }
+      }
+
+      window.addEventListener("load", init);
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          if (!localStorage.getItem("preferred-theme")) {
+            const currentTheme = document.body.getAttribute("data-theme");
+            if (
+              (e.matches && currentTheme === "light") ||
+              (!e.matches && currentTheme === "dark")
+            ) {
+              toggleTheme();
+            }
+          }
+        });
+    </script>
+  </body>
+</html>
